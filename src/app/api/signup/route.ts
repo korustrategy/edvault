@@ -17,9 +17,7 @@ export async function POST(req: NextRequest) {
 
   // Save to Airtable
   if (airtableBase && airtableKey) {
-    console.log("Airtable base:", airtableBase);
-    console.log("Airtable key prefix:", airtableKey.slice(0, 8));
-    const airtableRes = await fetch(
+const airtableRes = await fetch(
       `https://api.airtable.com/v0/${airtableBase}/tblNazzAn0pCCqZYZ`,
       {
         method: "POST",
