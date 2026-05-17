@@ -8,11 +8,42 @@ export async function POST(req: NextRequest) {
   }
 
   const resendKey = process.env.RESEND_API_KEY;
+  const airtableBase = process.env.AIRTABLE_BASE_ID;
+  const airtableKey = process.env.AIRTABLE_API_KEY;
 
   if (!resendKey) {
     return NextResponse.json({ error: "Email service not configured." }, { status: 500 });
   }
 
+  // Save to Airtable
+  if (airtableBase && airtableKey) {
+    const airtableRes = await fetch(
+      `https://api.airtable.com/v0/${airtableBase}/Leads`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${airtableKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fields: {
+            Name: name,
+            Email: email,
+            "Organization / Role": organization || "",
+            "Interest Area": Array.isArray(interest) ? interest.join(", ") : interest || "",
+            "Submitted At": new Date().toISOString(),
+          },
+        }),
+      }
+    );
+
+    if (!airtableRes.ok) {
+      const err = await airtableRes.text();
+      console.error("Airtable error:", err);
+    }
+  }
+
+  // Send notification email via Resend
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
